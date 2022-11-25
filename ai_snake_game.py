@@ -65,7 +65,7 @@ def scoreText():
     display.blit(value, [0, 0])
 
 def stateText(state):
-    os.system("cls")
+    # os.system("cls")
     state  = np.array(state, dtype=str)
     text = "Danger: S = " + state[0] + " ;R = " + state[1] + " ;L = "+state[2] + "\n" + "Direction: L = " + state[3] + " ;R = " + state[4] + " ;U = " + state[5] + " ;D = " + state[6] + "\n" + "Food: L = " + state[7] + " ;R = " + state[8] + " ;U = " + state[9] + " ;D = " + state[10] + "\n\n"
     print(text)
@@ -104,53 +104,75 @@ Else            : 0
 ]
 
 """
-from collections import namedtuple
-Point = namedtuple('Point','x , y')
-state = None
-
-def is_collision(pt=None):
-    if(pt is None):
-        pt = tail[-1]
-    #hit boundary
-    if(pt[0] > w - BLOCK_SIZE or pt[0] < 0 or pt[1] > h - BLOCK_SIZE or pt[1] < 0):
-        return True
-    if(pt in tail[:-1]):
-        return True
-    return False
-
 # AI - State
 def get_state():
-    head = tail[-1]
-    point_l = Point(head[0] - BLOCK_SIZE, head[0])
-    point_r = Point(head[0] + BLOCK_SIZE, head[1])
-    point_u = Point(head[0], head[1] - BLOCK_SIZE)
-    point_d = Point(head[0], head[1] + BLOCK_SIZE)
+    head = [x,y]
  
     dir_l = LEFT
     dir_r = RIGHT
     dir_u = UP
     dir_d = DOWN
- 
-    state = [
-        # TODO: Still Bugging. Fixed ASAP
+    
+    # CUSTOME DANGER DETECTION
+    danger_s = False
+    danger_l = False
+    danger_r = False
+    
+
+    if dir_u:
+        point_l = [head[0] - BLOCK_SIZE, head[1]]
+        point_r = [head[0] + BLOCK_SIZE, head[1]]
+        point_s = [head[0], head[1] - BLOCK_SIZE]
         
-        # Danger Straight
-        (dir_u and is_collision(point_u))or
-        (dir_d and is_collision(point_d))or
-        (dir_l and is_collision(point_l))or
-        (dir_r and is_collision(point_r)),
- 
-        # Danger right
-        (dir_u and is_collision(point_r))or
-        (dir_d and is_collision(point_l))or
-        (dir_u and is_collision(point_u))or
-        (dir_d and is_collision(point_d)),
- 
-        # Danger Left
-        (dir_u and is_collision(point_r))or
-        (dir_d and is_collision(point_l))or
-        (dir_r and is_collision(point_u))or
-        (dir_l and is_collision(point_d)),
+        if point_l[0] < 0 or point_l in tail[:-1]:
+            danger_l = True
+        if point_r[0] > w-BLOCK_SIZE or point_r in tail[:-1]:
+            danger_r = True
+        if point_s[1] < 0 or point_s in tail[:-1]:
+            danger_s = True
+        
+    
+    if dir_d:
+        point_r = [head[0] - BLOCK_SIZE, head[1]]
+        point_l = [head[0] + BLOCK_SIZE, head[1]]
+        point_s = [head[0], head[1] + BLOCK_SIZE]
+        
+        if point_r[0] < 0 or point_r in tail[:-1]:
+            danger_r = True
+        if point_l[0] > w-BLOCK_SIZE or point_l in tail[:-1]:
+            danger_l = True
+        if point_s[1] > h-BLOCK_SIZE or point_s in tail[:-1]:
+            danger_s = True
+    
+    if dir_r:
+        point_r = [head[0], head[1] + BLOCK_SIZE]
+        point_l = [head[0], head[1] - BLOCK_SIZE]
+        point_s = [head[0] + BLOCK_SIZE, head[1]]
+        
+        if point_r[1] > h-BLOCK_SIZE or point_r in tail[:-1]:
+            danger_r = True
+        if point_l[1] < 0 or point_l in tail[:-1]:
+            danger_l = True
+        if point_s[0] > w-BLOCK_SIZE or point_s in tail[:-1]:
+            danger_s = True
+    
+    if dir_l:
+        point_r = [head[0], head[1] - BLOCK_SIZE]
+        point_l = [head[0], head[1] + BLOCK_SIZE]
+        point_s = [head[0] - BLOCK_SIZE, head[1]]
+        
+        if point_r[1] < 0 or point_r in tail[:-1]:
+            danger_r = True
+        if point_l[1] > h-BLOCK_SIZE or point_l in tail[:-1]:
+            danger_l = True
+        if point_s[0] < 0 or point_s in tail[:-1]:
+            danger_s = True
+            
+    state = [
+        # Danger
+        danger_s,
+        danger_r,
+        danger_l,
  
         # Move Direction
         dir_l,
@@ -167,8 +189,17 @@ def get_state():
     return np.array(state, dtype=int)
 
 
+
 over = False
 while not over:
+    
+    """
+    pygame.draw.rect(display, RED, [0, 0, 10, 10])
+    pygame.draw.rect(display, RED, [290, 290, 10, 10])
+    os.system("pause")
+    """
+    
+    #1 - LISTEN TO AN EVENT
     # EVENTS
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -203,18 +234,53 @@ while not over:
                 x_c = 0
                 y_c = +BLOCK_SIZE
     
+    #2 - UPDATE THE COORDINATE X,Y
     # MOVING
     x += x_c
     y += y_c
     
-    # STATE
-    state = get_state()
-    
+    #3 - UPDATE ALL VARIABLES
+    # EAT
+    if x == x_apple and y == y_apple:
+        is_there_apple = False
+        point += 1
+        
+        tail.append([x,y])
+        
     # MOVING TAIL
     tail.append([x,y])
     if len(tail) > tail_length:
         del tail[0]
+    """s
+        -- inital    
+        [[150, 150]]
         
+        -- move 1 
+        [[150, 150], [160, 150]]
+        
+        -- pop 1 at front
+        [[160, 150]]
+    
+    """
+    
+    #4 - PLOTTING 
+    # WIPE THE SCREEN FIRST BEFORE PLOTTING
+    display.fill(WHITE)
+    # APPLE
+    if is_there_apple == False:
+        x_apple = random.randint(0, 29)*BLOCK_SIZE
+        y_apple = random.randint(0, 29)*BLOCK_SIZE
+        is_there_apple = True
+    pygame.draw.rect(display, RED, [x_apple, y_apple, BLOCK_SIZE, BLOCK_SIZE])
+    # SNAKE 
+    for j in tail:
+        pygame.draw.rect(display, YELLOW, [j[0], j[1], BLOCK_SIZE, BLOCK_SIZE], width=1)
+    # SCORE
+    scoreText()
+    # UPDATE SCREEN
+    pygame.display.update()
+    
+    #5 - CHECK CONDITION
     # TAIL COLLISION    
     for i in tail[:-1]:
         if i == [x,y]:
@@ -225,40 +291,23 @@ while not over:
         over = True
         break
     
-    # EAT
-    if x == x_apple and y == y_apple:
-        is_there_apple = False
-        point += 1
-        
-        tail.append([x,y])
-        
+    #6 - GET DATA STATE
+    # STATE
+    state = get_state()
     
-    # WIPE THE SCREEN FIRST BEFORE PLOTTING
-    display.fill(WHITE)
-    
-    # STATE STATUS
+    # STATE STATUS - PLOTTING DEBUGGING
     stateText(state)
     
-    # APPLE
-    if is_there_apple == False:
-        x_apple = random.randint(0, 29)*BLOCK_SIZE
-        y_apple = random.randint(0, 29)*BLOCK_SIZE
-        is_there_apple = True
-    pygame.draw.rect(display, RED, [x_apple, y_apple, BLOCK_SIZE, BLOCK_SIZE])
     
-    # SNAKE 
-    for j in tail:
-        pygame.draw.rect(display, YELLOW, [j[0], j[1], BLOCK_SIZE, BLOCK_SIZE], width=1)
     
-    # SCORE
-    scoreText()
+    
     
     # DEBUG
     # print("X : {}".format(x))
     # print("Y : {}".format(x))
     # print("Point : {}".format(point))
         
-    pygame.display.update()
+    
     clock.tick(SPEED)
     
 gameOverText()
