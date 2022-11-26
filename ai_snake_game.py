@@ -245,7 +245,7 @@ while not over:
         is_there_apple = False
         point += 1
         
-        tail.append([x,y])
+        tail_length += 1
         
     # MOVING TAIL
     tail.append([x,y])
@@ -298,10 +298,7 @@ while not over:
     # STATE STATUS - PLOTTING DEBUGGING
     stateText(state)
     
-    
-    
-    
-    
+
     # DEBUG
     # print("X : {}".format(x))
     # print("Y : {}".format(x))
