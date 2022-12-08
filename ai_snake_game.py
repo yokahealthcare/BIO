@@ -294,9 +294,13 @@ while not over:
     #6 - GET DATA STATE
     # STATE
     state = get_state()
-    
     # STATE STATUS - PLOTTING DEBUGGING
-    stateText(state)
+    # stateText(state)
+    
+    #7 DEEP LEARNING Q
+    
+    
+    
     
 
     # DEBUG
